@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from logging_middleware.middleware import log_function
+from logging_middleware.middleware import log_execution
 from notification_app_be.models.notification import (
     Notification,
     parse_notification,
@@ -19,7 +19,7 @@ from notification_app_be.utils.heap import (
 from notification_app_be.utils.priority import calculate_priority
 
 
-@log_function
+@log_execution(package="handler")
 def parse_valid_notifications(items: list[dict[str, Any]]) -> list[Notification]:
     """Parse valid notifications and skip malformed API records."""
     notifications: list[Notification] = []
@@ -36,7 +36,7 @@ def parse_valid_notifications(items: list[dict[str, Any]]) -> list[Notification]
     return notifications
 
 
-@log_function
+@log_execution(package="service")
 def process_stream(notifications: list[Notification], limit: int = 10) -> list[HeapEntry]:
     """Process notifications one-by-one using a bounded min-heap."""
     heap: list[HeapEntry] = []
@@ -50,7 +50,7 @@ def process_stream(notifications: list[Notification], limit: int = 10) -> list[H
     return top_notifications_descending(heap)
 
 
-@log_function
+@log_execution(package="handler")
 def serialize_ranked_notifications(entries: list[HeapEntry]) -> list[dict[str, Any]]:
     """Serialize heap entries for final Stage 1 output."""
     return [
@@ -64,7 +64,7 @@ def serialize_ranked_notifications(entries: list[HeapEntry]) -> list[dict[str, A
     ]
 
 
-@log_function
+@log_execution(package="service")
 def compute_top_notifications(raw_items: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
     """Parse, rank, and serialize the Top 10 notifications."""
     notifications = parse_valid_notifications(raw_items)

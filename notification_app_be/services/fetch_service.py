@@ -7,14 +7,14 @@ from typing import Any
 
 import requests
 
-from logging_middleware.middleware import log_function
+from logging_middleware.middleware import log_execution
 
 API_URL = "http://20.207.122.201/evaluation-service/notifications"
 MAX_ERROR_BODY_CHARS = 500
 API_TOKEN_ENV = "API_TOKEN"
 
 
-@log_function
+@log_execution(package="service")
 def extract_notification_items(payload: Any) -> list[dict[str, Any]]:
     """Extract notification objects from supported API response shapes."""
     if isinstance(payload, list):
@@ -30,7 +30,7 @@ def extract_notification_items(payload: Any) -> list[dict[str, Any]]:
     return [item for item in items if isinstance(item, dict)]
 
 
-@log_function
+@log_execution(package="service")
 def build_api_error_payload(exc: requests.RequestException) -> dict[str, Any]:
     """Build a safe structured API error payload."""
     response = exc.response
@@ -42,15 +42,30 @@ def build_api_error_payload(exc: requests.RequestException) -> dict[str, Any]:
     }
 
 
-@log_function
+@log_execution(package="service")
 def fetch_notifications(url: str = API_URL, timeout_seconds: int = 10) -> list[dict[str, Any]]:
     """Fetch notifications from the evaluation API with graceful failure handling."""
     try:
         access_token = os.getenv(API_TOKEN_ENV)
         if not access_token:
+            # Fallback to a local sample file to allow local runs without an API token.
+            # The repo root is two parents up from this file (notification_app_be/services).
+            from pathlib import Path
+            sample_file = Path(__file__).resolve().parents[2] / "sample_notifications.json"
+            if sample_file.exists():
+                try:
+                    import json
+
+                    with sample_file.open("r", encoding="utf-8") as fh:
+                        data = json.load(fh)
+                    return extract_notification_items(data)
+                except Exception:
+                    # Fall through to return structured error payload below
+                    pass
+
             return [
                 {
-                    "error": f"{API_TOKEN_ENV} is missing from environment",
+                    "error": f"{API_TOKEN_ENV} is missing from environment and no sample file found",
                     "status_code": None,
                     "response_body": None,
                 }

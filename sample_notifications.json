@@ -1,0 +1,7 @@
+[
+  {"id": "a", "type": "placement", "timestamp": 1700000000000},
+  {"id": "b", "type": "result", "timestamp": 1690000000000},
+  {"id": "c", "type": "event", "timestamp": 1700000500},
+  {"id": "d", "type": "placement", "timestamp": "2023-11-14T12:00:00Z"},
+  {"id": "e", "type": "result", "timestamp": 1700001000000}
+]

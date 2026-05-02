@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from logging_middleware.middleware import log_function
+from logging_middleware.middleware import log_execution
 
 
 @dataclass(frozen=True)
@@ -16,7 +16,7 @@ class Notification:
     timestamp: float
 
 
-@log_function
+@log_execution(package="domain")
 def normalize_timestamp(raw_timestamp: Any) -> float:
     """Normalize supported timestamp shapes to epoch seconds."""
     if isinstance(raw_timestamp, (int, float)):
@@ -30,7 +30,7 @@ def normalize_timestamp(raw_timestamp: Any) -> float:
     raise ValueError("notification timestamp is missing or invalid")
 
 
-@log_function
+@log_execution(package="handler")
 def parse_notification(payload: dict[str, Any]) -> Notification:
     """Create a Notification from an API payload."""
     notification_id = payload.get("id") or payload.get("ID")
@@ -57,7 +57,7 @@ def parse_notification(payload: dict[str, Any]) -> Notification:
     )
 
 
-@log_function
+@log_execution(package="domain")
 def reference_time_seconds(notifications: list[Notification]) -> float:
     """Return the recency reference time for a fetched batch."""
     if not notifications:
